@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NU Study - Login Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        nualt: '#0d082c',
+                        nudark: '#16113a',
+                        nuyellow: '#ffde59',
+                        nuyellowhover: '#f2cc35',
+                        nulight: '#f3f3f5'
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background-color: #0d082c; user-select: none; }
+        .custom-input { background: transparent !important; border: none !important; border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; border-radius: 0 !important; color: #ffffff !important; padding: 0.75rem 0 !important; transition: all 0.25s ease; }
+        .custom-input:focus { outline: none !important; box-shadow: none !important; border-bottom-color: #ffde59 !important; }
+        .custom-input::placeholder { color: rgba(255, 255, 255, 0.35); }
+        .modal-overlay { backdrop-filter: blur(8px); background: rgba(8, 5, 26, 0.7); }
+    </style>
+</head>
+<body class="relative w-screen h-screen flex items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 w-full h-full flex pointer-events-none">
+        <div class="w-1/2 h-full bg-nualt"></div>
+        <div class="w-1/2 h-full relative bg-cover bg-center" style="background-image: url('https://dboqplvzu03z6.cloudfront.net/web/production/assets/discover-nu-manila-campus-1e9c479e51c63af192b112f47672946d64f1548fa8b2eb1eb043f6c49d7dab89.webp');">
+            <div class="absolute inset-0 bg-nualt/40"></div>
+        </div>
+    </div>
+
+    <main class="relative z-10 w-full max-w-[960px] h-[80vh] max-h-[640px] px-4 md:px-0">
+        <div class="w-full h-full flex rounded-[32px] shadow-[0_30px_70px_rgba(0,0,0,0.65)] overflow-hidden">
+            <section class="w-1/2 h-full bg-nudark rounded-l-[32px] p-8 md:p-12 flex flex-col justify-between relative z-20">
+                <div>
+                    <header class="mb-8">
+                        <h1 class="text-3xl md:text-4xl font-bold text-white tracking-tight mb-1">Login</h1>
+                        <p class="text-white/50 text-sm font-light">Enter your account details</p>
+                    </header>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                      {% if messages %}
+                        {% for category, message in messages %}
+                          <div class="mb-4 p-3 rounded-xl text-xs bg-{{ 'red' if category == 'danger' else 'green' }}-500/20 text-{{ 'red' if category == 'danger' else 'green' }}-300 border border-{{ 'red' if category == 'danger' else 'green' }}-500/30">
+                            {{ message }}
+                          </div>
+                        {% endfor %}
+                      {% endif %}
+                    {% endwith %}
+
+                    <form action="{{ url_for('login') }}" method="POST" class="space-y-5">
+                        <div>
+                            <input type="text" name="usernameInput" required placeholder="Email Address" autocomplete="off" class="w-full custom-input text-sm">
+                        </div>
+                        <div>
+                            <input type="password" name="passwordInput" required placeholder="Password" class="w-full custom-input text-sm">
+                        </div>
+                        <button type="submit" class="w-full bg-nuyellow hover:bg-nuyellowhover text-nudark font-bold py-3 px-4 rounded-xl text-sm shadow-md transition-all duration-200 mt-2">
+                            Login
+                        </button>
+                    </form>
+
+                    <div class="mt-6 flex items-center justify-center space-x-3 text-xs text-white/50">
+                        <span>Don't have an account?</span>
+                        <a href="{{ url_for('register') }}" class="bg-white/10 hover:bg-white/20 text-white font-semibold px-4 py-1.5 rounded-full transition-all duration-200">
+                            Sign up
+                        </a>
+                    </div>
+                </div>
+
+                <footer class="text-center text-[11px] text-white/35 pt-4">
+                    <span>&copy; 2026 NU Study. All rights reserved.</span>
+                </footer>
+            </section>
+
+            <section class="w-1/2 h-full bg-nulight rounded-r-[32px] relative flex flex-col items-center justify-center text-center p-8">
+                <div class="relative z-20 flex flex-col items-center">
+                    <p class="text-gray-500 font-medium text-base mb-1">Welcome to</p>
+                    <h2 class="text-4xl md:text-5xl font-extrabold text-nudark tracking-tight mb-6">NU Study</h2>
+                    <div class="inline-block bg-nuyellow text-nudark font-bold text-xs md:text-sm px-6 py-2.5 rounded-full shadow-md">
+                        A Reliable Learning System Portal
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

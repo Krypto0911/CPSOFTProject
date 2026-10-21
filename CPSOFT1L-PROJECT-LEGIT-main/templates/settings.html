@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NU Study - Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Gantari:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f4f5f7; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .app-wrapper { display: flex; height: 100vh; width: 100vw; }
+        .sidebar { 
+            width: 280px; 
+            background-color: var(--sidebar-bg, #150f3b); 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            padding: 1.5rem 1.2rem; 
+            border-right-width: 4px;
+            border-right-style: solid;
+            border-right-color: var(--sidebar-border, #ffde59);
+        }
+        .sidebar-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; padding-left: 0.5rem; }
+        .sidebar-brand img { width: 42px; height: 48px; object-fit: contain; }
+        .brand-text { font-family: 'Gantari', sans-serif; font-weight: 700; font-size: 0.95rem; line-height: 1.1; color: #ffde59; letter-spacing: 0.5px; }
+        .nav-link-custom { display: flex; align-items: center; gap: 1rem; color: rgba(255,255,255,0.7); padding: 0.75rem 1rem; border-radius: 8px; text-decoration: none; font-weight: 500; margin-bottom: 0.25rem; transition: 0.2s; }
+        .nav-link-custom:hover, .nav-link-custom.active { background-color: #ffde59; color: #150f3b; font-weight: 600; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .top-navbar { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaeaea; }
+        .main-title { font-family: 'Gantari', sans-serif; font-weight: 700; }
+        .card-custom { background: white; border-radius: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 2rem; }
+        .btn-yellow { background-color: #ffde59; color: #150f3b; font-weight: 700; border: none; border-radius: 10px; padding: 0.6rem 1.5rem; font-family: 'Gantari', sans-serif; }
+        .color-swatch-box { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef; }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <div class="sidebar" id="sidebarElement">
+        <div>
+            <div class="sidebar-brand">
+                <img src="https://dboqplvzu03z6.cloudfront.net/web/production/assets/contact-us-28ccf43265607ced3608c2c88d671ec8dbd210613cbb4042c0de3085f8c554f7.webp" alt="NU Logo">
+                <div class="brand-text">NATIONAL<br>UNIVERSITY</div>
+            </div>
+
+            <div class="nav flex-column">
+                <a href="{{ url_for('dashboard') }}" class="nav-link-custom"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+                <a href="{{ url_for('courses') }}" class="nav-link-custom"><i class="bi bi-journal-bookmark-fill"></i> Courses</a>
+                <a href="{{ url_for('calendar') }}" class="nav-link-custom"><i class="bi bi-calendar-event"></i> Calendar</a>
+                <a href="{{ url_for('mailbox') }}" class="nav-link-custom"><i class="bi bi-envelope-fill"></i> Mailbox</a>
+                <a href="{{ url_for('notifications') }}" class="nav-link-custom"><i class="bi bi-bell-fill"></i> Notifications</a>
+            </div>
+        </div>
+
+        <div class="nav flex-column border-top border-secondary pt-3">
+            <a href="{{ url_for('settings') }}" class="nav-link-custom active"><i class="bi bi-gear-fill"></i> Settings</a>
+            <a href="{{ url_for('logout') }}" class="nav-link-custom text-danger"><i class="bi bi-box-arrow-right"></i> Log out</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <div>
+                <h4 class="main-title mb-0 text-dark">Portal Settings</h4>
+                <small class="text-muted">Manage your profile and preferences</small>
+            </div>
+        </div>
+
+        <div class="p-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="mb-4 alert alert-success py-2 small">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <div class="row g-4">
+                <div class="col-md-9">
+                    <div class="card-custom mb-4">
+                        <h5 class="main-title fw-bold text-dark mb-4">Profile Information</h5>
+                        <form action="{{ url_for('settings') }}" method="POST">
+                            <div class="row mb-3">
+                                <div class="col-md-6"><label class="form-label small text-muted">First Name</label><input type="text" class="form-control" value="{{ user.firstname }}" disabled></div>
+                                <div class="col-md-6"><label class="form-label small text-muted">Last Name</label><input type="text" class="form-control" value="{{ user.lastname }}" disabled></div>
+                            </div>
+                            <div class="mb-3"><label class="form-label small text-muted">Registered Email</label><input type="email" name="email" class="form-control" value="{{ user.email }}"></div>
+                            <button type="submit" class="btn btn-yellow shadow-sm">Save Profile</button>
+                        </form>
+                    </div>
+
+                    <div class="card-custom">
+                        <h5 class="main-title fw-bold text-dark mb-4">Sidebar Appearance</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="color-swatch-box">
+                                    <input type="color" id="bgColorPicker" class="form-control form-control-color" value="#150f3b" style="width: 50px; height: 42px;">
+                                    <div>
+                                        <label class="form-label mb-0 fw-bold text-dark small">Sidebar Background</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="color-swatch-box">
+                                    <input type="color" id="borderColorPicker" class="form-control form-control-color" value="#ffde59" style="width: 50px; height: 42px;">
+                                    <div>
+                                        <label class="form-label mb-0 fw-bold text-dark small">Right Border Accent</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-yellow shadow-sm" onclick="savePreferences()">Apply Preferences</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const sidebarEl = document.getElementById('sidebarElement');
+    const bgPicker = document.getElementById('bgColorPicker');
+    const borderPicker = document.getElementById('borderColorPicker');
+
+    const savedBg = localStorage.getItem('sidebarBgColor') || '#150f3b';
+    const savedBorder = localStorage.getItem('sidebarBorderColor') || '#ffde59';
+
+    bgPicker.value = savedBg;
+    borderPicker.value = savedBorder;
+
+    if (sidebarEl) {
+        sidebarEl.style.setProperty('--sidebar-bg', savedBg);
+        sidebarEl.style.setProperty('--sidebar-border', savedBorder);
+    }
+
+    bgPicker.addEventListener('input', (e) => {
+        if (sidebarEl) sidebarEl.style.setProperty('--sidebar-bg', e.target.value);
+    });
+
+    borderPicker.addEventListener('input', (e) => {
+        if (sidebarEl) sidebarEl.style.setProperty('--sidebar-border', e.target.value);
+    });
+
+    function savePreferences() {
+        localStorage.setItem('sidebarBgColor', bgPicker.value);
+        localStorage.setItem('sidebarBorderColor', borderPicker.value);
+        alert('Sidebar customization saved and synced across all pages!');
+    }
+</script>
+</body>
+</html>

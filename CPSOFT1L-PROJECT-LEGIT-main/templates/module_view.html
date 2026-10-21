@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NU Study - Module View</title>
+    <link href="https://fonts.googleapis.com/css2?family=Gantari:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f4f5f7; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .app-wrapper { display: flex; height: 100vh; width: 100vw; }
+        .sidebar { width: 280px; background-color: var(--sidebar-bg, #150f3b); color: white; display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem 1.2rem; border-right: 4px solid var(--sidebar-border, #ffde59); }
+        .sidebar-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; padding-left: 0.5rem; }
+        .sidebar-brand img { width: 42px; height: 48px; object-fit: contain; flex-shrink: 0; }
+        .brand-text { font-family: 'Gantari', sans-serif; font-weight: 700; font-size: 0.9rem; color: #ffde59; line-height: 1.15; letter-spacing: 0.5px; }
+        .nav-link-custom { display: flex; align-items: center; gap: 1rem; color: rgba(255,255,255,0.7); padding: 0.75rem 1rem; border-radius: 8px; text-decoration: none; font-weight: 500; margin-bottom: 0.25rem; transition: 0.2s; }
+        .nav-link-custom:hover, .nav-link-custom.active { background-color: #ffde59; color: #150f3b; font-weight: 600; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .top-navbar { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaeaea; }
+        .card-custom { background: white; border-radius: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 2rem; margin-bottom: 1.5rem; }
+        .row-graded { opacity: 0.55; background-color: #fcfcfc; }
+    </style>
+</head>
+<body>
+<div class="app-wrapper">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div>
+            <div class="sidebar-brand">
+                <img src="https://dboqplvzu03z6.cloudfront.net/web/production/assets/contact-us-28ccf43265607ced3608c2c88d671ec8dbd210613cbb4042c0de3085f8c554f7.webp" alt="NU Logo">
+                <div class="brand-text">NATIONAL<br>UNIVERSITY</div>
+            </div>
+            <div class="nav flex-column">
+                <a href="{{ url_for('dashboard') }}" class="nav-link-custom"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+                <a href="{{ url_for('courses') }}" class="nav-link-custom active"><i class="bi bi-journal-bookmark-fill"></i> Courses</a>
+                <a href="{{ url_for('calendar') }}" class="nav-link-custom"><i class="bi bi-calendar-event"></i> Calendar</a>
+                <a href="{{ url_for('mailbox') }}" class="nav-link-custom"><i class="bi bi-envelope-fill"></i> Mailbox</a>
+                <a href="{{ url_for('notifications') }}" class="nav-link-custom"><i class="bi bi-bell-fill"></i> Notifications</a>
+            </div>
+        </div>
+        <div class="nav flex-column border-top border-secondary pt-3">
+            <a href="{{ url_for('settings') }}" class="nav-link-custom"><i class="bi bi-gear-fill"></i> Settings</a>
+            <a href="{{ url_for('logout') }}" class="nav-link-custom text-danger"><i class="bi bi-box-arrow-right"></i> Log out</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-navbar">
+            <div>
+                <h4 class="fw-bold mb-0 text-dark" style="font-family: Gantari;">Module Management</h4>
+                <small class="text-muted">{{ module.title }}</small>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1.5 border-0 shadow-sm" type="button" data-bs-toggle="dropdown">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 28px; height: 28px; font-size: 0.8rem;">{{ user.firstname[0] }}</div>
+                    <div class="text-start">
+                        <span class="d-block fw-semibold" style="font-size: 0.85rem; line-height: 1.1;">{{ user.firstname }} {{ user.lastname }}</span>
+                        <span class="text-muted" style="font-size: 0.7rem;">{{ user.role | title }}</span>
+                    </div>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+                    <li><a class="dropdown-item py-2" href="{{ url_for('settings') }}"><i class="bi bi-gear me-2"></i> Settings</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item py-2 text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Log out</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Module Header Card -->
+            <div class="card-custom">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge bg-secondary mb-2 text-uppercase">{{ module.type }}</span>
+                        <h2 class="fw-bold text-dark">{{ module.title }}</h2>
+                        {% if module.due_date %}
+                            <p class="text-muted small mb-0"><i class="bi bi-calendar-event me-1"></i> Deadline: {{ module.due_date }}</p>
+                        {% endif %}
+                    </div>
+                    {% if user.role == 'TEACHER' %}
+                        <button class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#editModuleModal">
+                            <i class="bi bi-pencil me-1"></i> Edit Module Settings
+                        </button>
+                    {% endif %}
+                </div>
+
+                <hr class="text-muted opacity-25">
+
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark mb-2">Instructions / Overview:</h6>
+                    <p class="text-muted mb-0">{{ module.content or 'No instructions provided.' }}</p>
+                </div>
+
+                <!-- Content Blocks Section -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-journal-text me-2 text-primary"></i>Notebook / Content Blocks</h5>
+                    {% if user.role == 'TEACHER' %}
+                        <button class="btn btn-warning btn-sm fw-semibold px-3" data-bs-toggle="modal" data-bs-target="#addBlockModal">
+                            <i class="bi bi-plus-lg me-1"></i> Add Block
+                        </button>
+                    {% endif %}
+                </div>
+
+                {% if content_blocks %}
+                    <div class="list-group">
+                        {% for block in content_blocks %}
+                            <div class="list-group-item list-group-item-action p-3 mb-2 rounded-3 border">
+                                <div class="d-flex justify-content-between">
+                                    <span class="badge bg-info text-dark mb-1">{{ block.block_type }}</span>
+                                    {% if user.role == 'TEACHER' %}
+                                        <form action="{{ url_for('delete_content_block', block_id=block.id) }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="module_id" value="{{ module.id }}">
+                                            <button type="submit" class="btn btn-link text-danger p-0 border-0" onclick="return confirm('Delete this block?')"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                                {% if block.block_type|upper == 'LINK' %}
+                                    <a class="d-inline-flex align-items-center gap-2" href="{{ block.block_content }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> {{ block.block_content }}</a>
+                                {% elif block.block_type|upper == 'FILE' and block.file_name %}
+                                    <p class="mb-2">{{ block.block_content }}</p>
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('static', filename='uploads/' ~ block.file_name) }}" download><i class="bi bi-download me-1"></i> Download attachment</a>
+                                {% else %}
+                                    <p class="mb-1 text-dark">{{ block.block_content }}</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 border border-dashed rounded-3 bg-light">
+                        <p class="text-muted mb-0 small">No content blocks added to this module yet.</p>
+                    </div>
+                {% endif %}
+
+                <!-- Student Completion Button for Lectures / Lessons -->
+                {% if user.role == 'STUDENT' and module.type and module.type | upper in ['LESSON', 'LECTURE'] %}
+                <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                    <form action="{{ url_for('complete_module') }}" method="POST">
+                        <input type="hidden" name="module_id" value="{{ module.id }}">
+                        <input type="hidden" name="course_id" value="{{ module.course_id }}">
+                        {% if is_completed %}
+                            <button type="button" class="btn btn-success fw-semibold px-4" disabled><i class="bi bi-check-circle-fill me-1"></i> Completed</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-warning fw-semibold px-4"><i class="bi bi-check2 me-1"></i> Mark as Complete</button>
+                        {% endif %}
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Assessment / Questions Hub (For Quiz & Exam Modules) -->
+            {% if module.type and module.type | upper in ['QUIZ', 'EXAM'] %}
+            <div class="card-custom">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-question-circle-fill me-2 text-warning"></i>Assessment Hub</h5>
+                    {% if user.role == 'TEACHER' %}
+                        <button class="btn btn-warning btn-sm fw-semibold px-3" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+                            <i class="bi bi-plus-lg me-1"></i> Add Question
+                        </button>
+                    {% endif %}
+                </div>
+
+                {% if questions %}
+                    {% if user.role == 'STUDENT' %}
+                        {% if is_completed %}
+                            <div class="alert alert-success d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <i class="bi bi-check-circle-fill me-2 fs-5"></i> <strong>Assessment Completed!</strong>
+                                    <div class="mt-1">Your Score: <span class="badge bg-success fs-6">{{ submission.score }} / {{ submission.total_questions }}</span></div>
+                                </div>
+                                <span class="badge bg-success px-3 py-2">Submitted</span>
+                            </div>
+                            <div class="list-group mb-3">
+                                {% for q in questions %}
+                                    <div class="list-group-item p-4 mb-3 border rounded-3 bg-light">
+                                        <h6 class="fw-bold text-dark mb-3">Q{{ loop.index }}: {{ q.question_text }}</h6>
+                                        {% if q.question_type != 'identification' %}<ul class="list-unstyled mb-2">
+                                            <li class="{% if q.correct_answer == 'A' %}text-success fw-bold{% endif %}">A) {{ q.option_a }}</li>
+                                            <li class="{% if q.correct_answer == 'B' %}text-success fw-bold{% endif %}">B) {{ q.option_b }}</li>
+                                            {% if q.question_type != 'true_false' %}<li class="{% if q.correct_answer == 'C' %}text-success fw-bold{% endif %}">C) {{ q.option_c }}</li>
+                                            <li class="{% if q.correct_answer == 'D' %}text-success fw-bold{% endif %}">D) {{ q.option_d }}</li>{% endif %}
+                                        </ul>{% endif %}
+                                        <div class="small text-muted mt-2">
+                                            Your Answer: <span class="fw-semibold text-dark">{{ student_answers.get(q.id | string, 'None') }}</span> | 
+                                            Correct Answer: <span class="text-success fw-semibold">{{ q.correct_answer if q.question_type == 'identification' else 'Option ' ~ q.correct_answer }}</span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {% if seconds_left is not none %}
+                            <div class="alert alert-warning">Time remaining: <strong id="quizTimer">--:--</strong>. The server also enforces the deadline.</div>
+                            {% endif %}
+                            <form id="assessmentForm" action="{{ url_for('submit_assessment') }}" method="POST">
+                                {% if seconds_left is not none %}<script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                  let left = {{ seconds_left }};
+                                  const el = document.getElementById('quizTimer');
+                                  const form = document.getElementById('assessmentForm');
+                                  let finished = false;
+                                  const key = 'draft-assessment-{{ user.id }}-{{ module.id }}';
+                                  function answers() {
+                                    const values = {};
+                                    new FormData(form).forEach((v, k) => { if(k.startsWith('q_')) values[k.substring(2)] = v; });
+                                    return values;
+                                  }
+                                  function save() {
+                                    if (finished || left <= 0) return;
+                                    const payload = JSON.stringify({module_id: {{ module.id }}, answers: answers()});
+                                    fetch('{{ url_for("autosave_assessment") }}', {method:'POST', headers:{'Content-Type':'application/json'}, body:payload, credentials:'same-origin', keepalive:true}).catch(() => {});
+                                  }
+                                  function finish() {
+                                    if (finished) return;
+                                    finished = true;
+                                    el.textContent = 'Time expired — submitting';
+                                    form.querySelectorAll('input, button').forEach(e => { if (e.type !== 'hidden') e.readOnly = true; });
+                                    form.noValidate = true;
+                                    sessionStorage.removeItem(key);
+                                    form.requestSubmit();
+                                  }
+                                  function tick() {
+                                    el.textContent = Math.floor(Math.max(0,left) / 60) + ':' + String(Math.max(0,left) % 60).padStart(2, '0');
+                                    if (left <= 0) finish(); else left--;
+                                  }
+                                  form.addEventListener('input', save);
+                                  form.addEventListener('change', save);
+                                  form.addEventListener('submit', () => { finished = true; });
+                                  tick(); setInterval(tick, 1000);
+                                  setInterval(save, 5000);
+                                });
+                                </script>{% endif %}
+                                <input type="hidden" name="module_id" value="{{ module.id }}">
+                                <input type="hidden" name="course_id" value="{{ module.course_id }}">
+                                <div class="list-group mb-3">
+                                    {% for q in questions %}
+                                        <div class="list-group-item p-4 mb-3 border rounded-3 shadow-sm">
+                                            <h6 class="fw-bold text-dark mb-3">Q{{ loop.index }}: {{ q.question_text }}</h6>
+                                            {% if q.question_type == 'identification' %}
+                                            <label class="form-label" for="q{{ q.id }}_text">Your answer</label>
+                                            <input id="q{{ q.id }}_text" type="text" name="q_{{ q.id }}" class="form-control" maxlength="500" placeholder="Type your answer">
+                                            {% else %}
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="radio" name="q_{{ q.id }}" id="q{{ q.id }}_a" value="A">
+                                                <label class="form-check-label" for="q{{ q.id }}_a">A) {{ q.option_a }}</label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="radio" name="q_{{ q.id }}" id="q{{ q.id }}_b" value="B">
+                                                <label class="form-check-label" for="q{{ q.id }}_b">B) {{ q.option_b }}</label>
+                                            </div>
+                                            {% if q.question_type != 'true_false' %}<div class="form-check mb-2">
+                                                <input class="form-check-input" type="radio" name="q_{{ q.id }}" id="q{{ q.id }}_c" value="C">
+                                                <label class="form-check-label" for="q{{ q.id }}_c">C) {{ q.option_c }}</label>
+                                            </div>{% endif %}
+                                            {% if q.question_type != 'true_false' %}<div class="form-check">
+                                                <input class="form-check-input" type="radio" name="q_{{ q.id }}" id="q{{ q.id }}_d" value="D">
+                                                <label class="form-check-label" for="q{{ q.id }}_d">D) {{ q.option_d }}</label>
+                                            </div>{% endif %}
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <button type="submit" class="btn btn-warning fw-semibold px-4">Submit Quiz Answers</button>
+                            </form>
+                            <script>
+                            document.querySelectorAll('#assessmentForm .list-group-item').forEach(function(card, idx) {
+                              const options = Array.from(card.querySelectorAll('.form-check'));
+                              if (options.length !== 4) return;
+                              let seed = ({{ user.id }} * 31 + {{ module.id }} * 97 + idx * 131) >>> 0;
+                              for (let i = options.length - 1; i > 0; i--) {
+                                seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
+                                const j = seed % (i+1); [options[i], options[j]] = [options[j], options[i]];
+                              }
+                              const parent = options[0].parentElement;
+                              options.forEach(x => parent.appendChild(x));
+                            });
+                            </script>
+                        {% endif %}
+                    {% else %}
+                        <!-- Teacher view of questions -->
+                        <div class="accordion" id="questionsAccordion">
+                            {% for q in questions %}
+                                <div class="accordion-item mb-2 border rounded-3 overflow-hidden">
+                                    <h2 class="accordion-header" id="heading{{ q.id }}">
+                                        <button class="accordion-button collapsed fw-semibold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ q.id }}">
+                                            Q{{ loop.index }}: {{ q.question_text }}
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ q.id }}" class="accordion-collapse collapse" data-bs-parent="#questionsAccordion">
+                                        <div class="accordion-body bg-light">
+                                            {% if q.question_type != 'identification' %}<ul class="list-unstyled mb-2">
+                                                <li><strong>A:</strong> {{ q.option_a }}</li>
+                                                <li><strong>B:</strong> {{ q.option_b }}</li>
+                                                {% if q.question_type != 'true_false' %}<li><strong>C:</strong> {{ q.option_c }}</li>{% endif %}
+                                                {% if q.question_type != 'true_false' %}<li><strong>D:</strong> {{ q.option_d }}</li>{% endif %}
+                                            </ul>{% endif %}
+                                            <div class="alert alert-success py-1 px-2 mb-0 small">
+                                                <strong>Correct Answer:</strong> {{ q.correct_answer if q.question_type == 'identification' else 'Option ' ~ q.correct_answer }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-4 border border-dashed rounded-3 bg-light">
+                        <p class="text-muted mb-0 small">No assessment questions added yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Student File Submission & Grade Display Section (Visible only for Assignments) -->
+            {% if user.role == 'STUDENT' and module.type and module.type | upper == 'ASSIGNMENT' %}
+            <div class="card-custom">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-upload me-2 text-primary"></i>Your Assignment Submission</h5>
+                
+                <!-- Display Grade & Feedback if Graded by Teacher -->
+                {% if submission and submission.manual_grade and grades_posted %}
+                    <div class="alert alert-info border-info mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong><i class="bi bi-award-fill me-1"></i> Grade Received:</strong>
+                            <span class="badge bg-success fs-6 px-3 py-1">{{ submission.manual_grade }}</span>
+                        </div>
+                        {% if submission.feedback %}
+                            <hr class="my-2">
+                            <p class="mb-0 small text-dark"><strong>Instructor Feedback:</strong> {{ submission.feedback }}</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if submission and submission.file_filename %}
+                    <div class="alert alert-success d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <i class="bi bi-check-circle-fill me-2"></i> Submitted File: <strong>{{ submission.file_filename }}</strong>
+                            <br><small class="text-muted">Submitted on: {{ submission.submitted_at }}</small>
+                        </div>
+                        <span class="badge bg-success">Uploaded</span>
+                    </div>
+                {% endif %}
+
+                <form action="{{ url_for('submit_assignment_file') }}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="module_id" value="{{ module.id }}">
+                    <input type="hidden" name="course_id" value="{{ module.course_id }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Upload / Re-submit Assignment File</label>
+                        <input type="file" name="assignment_file" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-warning fw-semibold px-4">Submit Assignment</button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Submissions & Scores Section for Teachers (Assignments, Quizzes, & Exams) -->
+            {% if user.role == 'TEACHER' and module.type and module.type | upper in ['ASSIGNMENT', 'QUIZ', 'EXAM'] %}
+            <div class="card-custom">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-people-fill me-2 text-success"></i>Student Submissions & Scores</h5>
+                {% if teacher_submissions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Email</th>
+                                    <th>Submission / File</th>
+                                    <th>Score / Grade</th>
+                                    <th>Submitted At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set sorted_subs = teacher_submissions | sort(attribute='manual_grade') %}
+                                {% for sub in sorted_subs %}
+                                <tr class="{% if sub.manual_grade or (module.type | upper in ['QUIZ', 'EXAM']) %}row-graded{% endif %}">
+                                    <td class="fw-semibold">{{ sub.firstname }} {{ sub.lastname }}</td>
+                                    <td class="text-muted">{{ sub.email }}</td>
+                                    <td>
+                                        {% if sub.file_filename %}
+                                            <a href="{{ url_for('static', filename='uploads/' + sub.file_filename) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-download me-1"></i> Download</a>
+                                        {% elif module.type | upper in ['QUIZ', 'EXAM'] %}
+                                            <span class="badge bg-info text-dark">Auto-graded Quiz</span>
+                                        {% else %}
+                                            <span class="text-muted">No file submitted</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if module.type | upper in ['QUIZ', 'EXAM'] %}
+                                            <span class="fw-bold text-success">{{ sub.score }} / {{ sub.total_questions }}</span>
+                                        {% else %}
+                                            {% if sub.manual_grade %}
+                                                <span class="badge bg-success px-2 py-1">{{ sub.manual_grade }}</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark px-2 py-1">Pending Grade</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td><small class="text-muted">{{ sub.submitted_at }}</small></td>
+                                    <td>
+                                        {% if module.type | upper == 'ASSIGNMENT' %}
+                                            <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#gradeModal{{ sub.id }}">
+                                                <i class="bi bi-award me-1"></i> {% if sub.manual_grade %}Edit Grade{% else %}Grade{% endif %}
+                                            </button>
+                                        {% else %}
+                                            <span class="text-muted small">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+
+                                <!-- Grade Modal for Assignment Submissions -->
+                                {% if module.type | upper == 'ASSIGNMENT' %}
+                                <div class="modal fade" id="gradeModal{{ sub.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content border-0 shadow rounded-4">
+                                            <form action="{{ url_for('grade_submission') }}" method="POST">
+                                                <input type="hidden" name="submission_id" value="{{ sub.id }}">
+                                                <input type="hidden" name="module_id" value="{{ module.id }}">
+                                                <div class="modal-header bg-light">
+                                                    <h5 class="fw-bold text-dark mb-0">Grade Assignment: {{ sub.firstname }} {{ sub.lastname }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Grade / Score (e.g. 95/100, A, Pass)</label>
+                                                        <input type="text" name="manual_grade" class="form-control" value="{{ sub.manual_grade or '' }}" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Feedback / Comments</label>
+                                                        <textarea name="feedback" class="form-control" rows="3" placeholder="Enter feedback for the student...">{{ sub.feedback or '' }}</textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer bg-light">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-warning fw-semibold px-4">Save Grade</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 border border-dashed rounded-3 bg-light">
+                        <p class="text-muted mb-0 small">No student submissions recorded yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Navigation Footer -->
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('course_detail', id=module.course_id) }}" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-1"></i> Return to Hub
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- Edit Module Settings Modal -->
+{% if user.role == 'TEACHER' %}
+<div class="modal fade" id="editModuleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow rounded-4">
+            <form action="{{ url_for('edit_module') }}" method="POST">
+                <input type="hidden" name="module_id" value="{{ module.id }}">
+                <div class="modal-header bg-light">
+                    <h5 class="fw-bold text-dark mb-0">Edit Module Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Module Title</label>
+                        <input type="text" name="title" class="form-control" value="{{ module.title }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Module Type</label>
+                        <select name="type" class="form-select" required>
+                            <option value="LESSON" {% if module.type | upper in ['LESSON', 'LECTURE'] %}selected{% endif %}>Lesson / Lecture</option>
+                            <option value="ASSIGNMENT" {% if module.type | upper == 'ASSIGNMENT' %}selected{% endif %}>Assignment</option>
+                            <option value="QUIZ" {% if module.type | upper == 'QUIZ' %}selected{% endif %}>Quiz</option>
+                            <option value="EXAM" {% if module.type | upper == 'EXAM' %}selected{% endif %}>Exam</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Section Name</label>
+                        <input type="text" name="section_name" class="form-control" value="{{ module.section_name }}">
+                    </div>
+                    <div class="mb-3"><label class="form-label fw-semibold">Quiz / Exam time limit (minutes, 0 = untimed)</label><input type="number" min="0" max="1440" name="time_limit_minutes" value="{{ module.time_limit_minutes or 0 }}" class="form-control"></div>
+                    <div class="mb-3"><label class="form-label fw-semibold">Quiz / Exam passing score (%)</label><input type="number" min="0" max="100" name="pass_percentage" value="{{ module.pass_percentage or 70 }}" class="form-control"></div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Deadline</label>
+                        <input type="date" name="due_date" class="form-control" value="{{ module.due_date }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Instructions / Overview</label>
+                        <textarea name="content" class="form-control" rows="4">{{ module.content }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning fw-semibold px-4">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Add Block Modal -->
+<div class="modal fade" id="addBlockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow rounded-4">
+            <form action="{{ url_for('add_content_block') }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="module_id" value="{{ module.id }}">
+                <div class="modal-header bg-light">
+                    <h5 class="fw-bold text-dark mb-0">Add Content Block</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Block Type</label>
+                        <select name="block_type" id="blockTypeSelect" class="form-select" required>
+                            <option value="TEXT">Text / Article</option>
+                            <option value="FILE">File Attachment</option>
+                            <option value="LINK">External Link</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="blockTextGroup">
+                        <label class="form-label fw-semibold" id="blockContentLabel" for="blockContentInput">Content / Description</label>
+                        <textarea name="block_content" id="blockContentInput" class="form-control" rows="4" placeholder="Enter block details..."></textarea>
+                    </div>
+                    <div class="mb-3 d-none" id="blockFileGroup">
+                        <label for="blockFileInput" class="form-label fw-semibold">Choose attachment (max 20 MB)</label>
+                        <input type="file" id="blockFileInput" name="block_file" class="form-control" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.png,.jpg,.jpeg,.zip">
+                        <div class="form-text">Students can download this file in their assignment view.</div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning fw-semibold px-4">Add Block</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+  const select=document.getElementById('blockTypeSelect');
+  if(!select)return;
+  const file=document.getElementById('blockFileGroup'), input=document.getElementById('blockFileInput');
+  const text=document.getElementById('blockTextGroup'), content=document.getElementById('blockContentInput');
+  const label=document.getElementById('blockContentLabel');
+  function update(){const kind=select.value.toUpperCase();file.classList.toggle('d-none',kind!=='FILE');
+    text.classList.toggle('d-none',kind==='FILE');input.required=kind==='FILE';content.required=kind!=='FILE';
+    label.textContent=kind==='LINK'?'External URL (https://...)':'Content / Description';
+    content.placeholder=kind==='LINK'?'https://example.com/resource':'Enter block details...';}
+  select.addEventListener('change',update); update();
+})();
+</script>
+<!-- Add Question Modal (For Quizzes & Exams) -->
+{% if module.type and module.type | upper in ['QUIZ', 'EXAM'] %}
+<div class="modal fade" id="addQuestionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow rounded-4">
+            <form action="{{ url_for('add_question') }}" method="POST">
+                <input type="hidden" name="module_id" value="{{ module.id }}">
+                <div class="modal-header bg-light">
+                    <h5 class="fw-bold text-dark mb-0">Add Assessment Question</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3"><label class="form-label fw-semibold">Question format</label><select name="question_type" class="form-select question-type-select"><option value="multiple_choice">Multiple Choice (A-D)</option><option value="true_false">True or False</option><option value="identification">Identification (short answer)</option></select></div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Question Text</label>
+                        <textarea name="question_text" class="form-control" rows="2" required placeholder="Enter the question..."></textarea>
+                    </div>
+                    <div class="mc-fields"><div class="mb-3">
+                        <label class="form-label fw-semibold">Option A</label>
+                        <input type="text" name="option_a" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Option B</label>
+                        <input type="text" name="option_b" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Option C</label>
+                        <input type="text" name="option_c" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Option D</label>
+                        <input type="text" name="option_d" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Correct Answer</label>
+                        <select name="correct_answer" class="form-select mc-answer" required>
+                            <option value="A">Option A</option>
+                            <option value="B">Option B</option>
+                            <option value="C">Option C</option>
+                            <option value="D">Option D</option>
+                        </select>
+                    </div>
+                    </div>
+                    <div class="identification-fields d-none mb-3"><label class="form-label fw-semibold">Correct identification answer</label><input class="form-control identification-answer" maxlength="500" placeholder="Accepted answer" disabled required></div><div class="tf-fields d-none mb-3"><label class="form-label fw-semibold">Correct answer</label><select class="form-select tf-answer" disabled><option value="A">True</option><option value="B">False</option></select></div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning fw-semibold px-4">Save Question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+document.querySelectorAll('.question-type-select').forEach(function(select){
+ const form=select.closest('form'), mc=form.querySelector('.mc-fields'),tf=form.querySelector('.tf-fields');
+ function update(){
+   const kind=select.value, isTF=kind==='true_false', isId=kind==='identification';
+   const idFields=form.querySelector('.identification-fields');
+   mc.classList.toggle('d-none',isTF||isId);
+   tf.classList.toggle('d-none',!isTF);
+   idFields.classList.toggle('d-none',!isId);
+   mc.querySelectorAll('input,select').forEach(el=>{el.disabled=isTF||isId});
+   const tfAns=tf.querySelector('select'),idAns=idFields.querySelector('input'),mcAns=form.querySelector('.mc-answer');
+   tfAns.disabled=!isTF;tfAns.name=isTF?'correct_answer':'';
+   idAns.disabled=!isId;idAns.name=isId?'correct_answer':'';
+   mcAns.name=(!isTF&&!isId)?'correct_answer':'';
+ }
+ select.addEventListener('change',update);update();
+});
+</script><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

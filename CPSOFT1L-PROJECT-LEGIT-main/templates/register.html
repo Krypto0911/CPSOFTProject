@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NU Study - Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body, html { height: 100vh; margin: 0; font-family: 'Inter', sans-serif; background-color: #0d082c; overflow: hidden; }
+        .page-container { position: relative; display: flex; width: 100vw; height: 100vh; }
+        .bg-left { width: 50%; height: 100%; background-color: #0d082c; }
+        .bg-right { width: 50%; height: 100%; background: url('https://dboqplvzu03z6.cloudfront.net/web/production/assets/discover-nu-manila-campus-1e9c479e51c63af192b112f47672946d64f1548fa8b2eb1eb043f6c49d7dab89.webp') center/cover no-repeat; position: relative; }
+        .bg-right::before { content: ""; position: absolute; inset: 0; background: rgba(13, 8, 44, 0.4); }
+        .card-wrapper { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 1000px; height: 84vh; max-height: 680px; display: flex; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6); border-radius: 32px; z-index: 10; }
+        .card-left { width: 50%; height: 100%; background-color: #16113a; border-top-left-radius: 32px; border-bottom-left-radius: 32px; display: flex; flex-direction: column; justify-content: space-between; padding: 2.2rem 2.8rem; overflow-y: auto; }
+        .form-label-custom { font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 0.1rem; }
+        .form-control-custom, .form-select-custom { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; color: white; padding: 0.4rem 0.7rem; margin-bottom: 0.6rem; font-size: 0.82rem; }
+        .form-control-custom:focus, .form-select-custom:focus { background: rgba(255, 255, 255, 0.08); border-color: #ffde59; color: white; outline: none; }
+        .form-select-custom option { background-color: #16113a; color: white; }
+        .gender-group { display: flex; gap: 0.8rem; align-items: center; margin-bottom: 0.6rem; }
+        .form-check-input:checked { background-color: #ffde59; border-color: #ffde59; }
+        .form-check-label { font-size: 0.75rem; color: rgba(255,255,255,0.8); }
+        .btn-yellow { background-color: #ffde59; color: #110d33 !important; font-weight: 700; border: none; border-radius: 12px; padding: 0.6rem; width: 100%; transition: 0.2s;; }
+        .btn-yellow:hover { background-color: #fccc3b; color: #110d33 !important; }
+        .card-right { width: 50%; height: 100%; background-color: #f3f3f5; border-top-right-radius: 32px; border-bottom-right-radius: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem; }
+        .badge-pill { background-color: #ffde59; color: #110d33; font-weight: 700; padding: 0.7rem 1.6rem; border-radius: 50px; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+<div class="page-container">
+    <div class="bg-left"></div>
+    <div class="bg-right"></div>
+    <div class="card-wrapper">
+        <div class="card-left">
+            <div>
+                <h1 class="fw-bold mb-1 text-white" style="font-size: 1.6rem;">Register Account</h1>
+                <div class="mb-3" style="width: 30px; height: 3px; background-color: #ffde59;"></div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="mb-3 p-2 rounded text-xs bg-{{ 'danger' if category == 'danger' else 'success' }} text-white">
+                        {{ message }}
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                <form action="{{ url_for('register') }}" method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">First Name</label>
+                            <input type="text" name="firstname" class="form-control form-control-custom" placeholder="First name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Last Name</label>
+                            <input type="text" name="lastname" class="form-control form-control-custom" placeholder="Last name" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Email Address</label>
+                            <input type="email" name="email" class="form-control form-control-custom" placeholder="Email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Role</label>
+                            <select name="role" class="form-select form-select-custom" required>
+                                <option value="" disabled selected>- Please Select -</option>
+                                <option value="STUDENT">Student</option>
+                                <option value="TEACHER">Teacher</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="form-label-custom">Password (Min 8 chars, uppercase, lowercase, number, symbol)</label>
+                            <input type="password" id="registerPassword" name="password" class="form-control form-control-custom" placeholder="Password" minlength="8" required aria-describedby="passwordHint">
+                            <div id="passwordHint" class="small mt-2" style="color:#ffe28a;" role="status">Use at least 8 characters including uppercase, lowercase, a number, and a special character.</div>
+                        </div>
+                    </div>
+
+                    <label class="form-label-custom d-block">Gender</label>
+                    <div class="gender-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="gender" id="male" value="Male" required>
+                            <label class="form-check-label" for="male">Male</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="gender" id="female" value="Female">
+                            <label class="form-check-label" for="female">Female</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="gender" id="other" value="Other">
+                            <label class="form-check-label" for="other">Other</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-yellow mb-2 shadow-sm">Register</button>
+                </form>
+
+                <div class="text-center text-white-50 mt-2" style="font-size: 0.8rem;">
+                    Already have an account? <a href="{{ url_for('login') }}" class="text-white fw-bold text-decoration-none ms-1">Sign in</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-right">
+            <div>
+                <p class="text-muted fw-medium mb-1">Welcome to</p>
+                <h1 class="fw-bold text-dark mb-4" style="font-size: 2.8rem;">NU Study</h1>
+                <div class="badge-pill">A Reliable Learning System Portal</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+ const input=document.getElementById('registerPassword'), hint=document.getElementById('passwordHint');
+ if(!input||!hint)return;
+ input.addEventListener('input',function(){
+   const v=input.value;
+   const good=v.length>=8 && /[A-Z]/.test(v) && /[a-z]/.test(v) && /[0-9]/.test(v) && /[^A-Za-z0-9]/.test(v);
+   hint.textContent=good?'Password meets the required format.':'Use at least 8 characters including uppercase, lowercase, a number, and a special character.';
+   hint.style.color=good?'#94f3bd':'#ffe28a';
+ });
+})();
+</script>
+</body>
+</html>

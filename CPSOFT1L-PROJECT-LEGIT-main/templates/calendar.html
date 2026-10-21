@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NU Study - Calendar Planner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Gantari:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f4f5f7; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .app-wrapper { display: flex; height: 100vh; width: 100vw; }
+        .sidebar { width: 280px; background-color: var(--sidebar-bg, #150f3b); color: white; display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem 1.2rem; border-right: 4px solid var(--sidebar-border, #ffde59); }
+        .sidebar-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; padding-left: 0.5rem; }
+        .sidebar-brand img { width: 42px; height: 48px; object-fit: contain; }
+        .brand-text { font-family: 'Gantari', sans-serif; font-weight: 700; font-size: 0.95rem; color: #ffde59; }
+        .nav-link-custom { display: flex; align-items: center; gap: 1rem; color: rgba(255,255,255,0.7); padding: 0.75rem 1rem; border-radius: 8px; text-decoration: none; font-weight: 500; margin-bottom: 0.25rem; transition: 0.2s; }
+        .nav-link-custom:hover, .nav-link-custom.active { background-color: #ffde59; color: #150f3b; font-weight: 600; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .top-navbar { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaeaea; }
+        .card-custom { background: white; border-radius: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 1.5rem; }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background-color: #dee2e6; border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden; }
+        .calendar-day { background-color: white; min-height: 120px; padding: 0.5rem; font-size: 0.85rem; position: relative; transition: 0.2s; cursor: pointer; }
+        .calendar-day:hover { background-color: #f8f9fa; }
+        .calendar-day.header { background-color: #f8f9fa; font-weight: 600; text-align: center; min-height: 40px; padding-top: 0.7rem; cursor: default; }
+        .calendar-day.other-month { color: #aaa; background-color: #fafafa; cursor: default; }
+        /* Notice pointer added to the badge */
+        .event-badge { font-size: 0.7rem; padding: 4px 6px; border-radius: 4px; margin-top: 4px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: white; cursor: pointer; transition: 0.2s; }
+        .event-badge:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <div class="sidebar" id="sidebarElement">
+        <div>
+            <div class="sidebar-brand">
+                <img src="https://dboqplvzu03z6.cloudfront.net/web/production/assets/contact-us-28ccf43265607ced3608c2c88d671ec8dbd210613cbb4042c0de3085f8c554f7.webp" alt="NU Logo">
+                <div class="brand-text">NATIONAL<br>UNIVERSITY</div>
+            </div>
+            <div class="nav flex-column">
+                <a href="{{ url_for('dashboard') }}" class="nav-link-custom"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+                <a href="{{ url_for('courses') }}" class="nav-link-custom"><i class="bi bi-journal-bookmark-fill"></i> Courses</a>
+                <a href="{{ url_for('calendar') }}" class="nav-link-custom active"><i class="bi bi-calendar-event"></i> Calendar</a>
+                <a href="{{ url_for('mailbox') }}" class="nav-link-custom"><i class="bi bi-envelope-fill"></i> Mailbox</a>
+                <a href="{{ url_for('notifications') }}" class="nav-link-custom"><i class="bi bi-bell-fill"></i> Notifications</a>
+            </div>
+        </div>
+        <div class="nav flex-column border-top border-secondary pt-3">
+            <a href="{{ url_for('settings') }}" class="nav-link-custom"><i class="bi bi-gear-fill"></i> Settings</a>
+            <a href="{{ url_for('logout') }}" class="nav-link-custom text-danger"><i class="bi bi-box-arrow-right"></i> Log out</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <div>
+                <h4 class="fw-bold mb-0 text-dark" style="font-family: Gantari;">Calendar Planner</h4>
+                <small class="text-muted">Create and manage your schedule</small>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-warning fw-bold px-3 py-2 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#createEventModal" onclick="document.getElementById('event_date').value = ''">
+                    <i class="bi bi-plus-lg me-1"></i> Create Event
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1.5 border-0 shadow-sm" type="button" data-bs-toggle="dropdown">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 28px; height: 28px; font-size: 0.8rem;">{{ user.firstname[0] }}</div>
+                        <div class="text-start">
+                            <span class="d-block fw-semibold" style="font-size: 0.85rem; line-height: 1.1;">{{ user.firstname }} {{ user.lastname }}</span>
+                            <span class="text-muted" style="font-size: 0.7rem;">{{ user.role | title }}</span>
+                        </div>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+                        <li><a class="dropdown-item py-2" href="{{ url_for('settings') }}"><i class="bi bi-gear me-2"></i> Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item py-2 text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Log out</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="mb-3 alert alert-success py-2 small">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <div class="card-custom">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0" id="currentMonthYear" style="font-family: Gantari;"></h5>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-secondary btn-sm fw-semibold" onclick="renderCalendar(new Date())">Today</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="changeMonth(-1)">&larr; Prev</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="changeMonth(1)">Next &rarr;</button>
+                    </div>
+                </div>
+
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Event Modal -->
+<div class="modal fade" id="createEventModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-dark text-white rounded-top-4">
+                <h5 class="modal-title fw-bold">Create Planner Event</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="{{ url_for('add_event') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Event Title</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. Study Group" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-muted">Date</label>
+                            <input type="date" id="event_date" name="event_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-muted">Color Code</label>
+                            <select name="category_color" class="form-select">
+                                <option value="bg-primary">Blue (Default)</option>
+                                <option value="bg-danger">Red (Urgent/Deadline)</option>
+                                <option value="bg-warning text-dark">Yellow (Important)</option>
+                                <option value="bg-success">Green (Personal)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Description (Optional)</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100 fw-bold py-2 shadow-sm">Add to Calendar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Event Modal -->
+<div class="modal fade" id="deleteEventModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-danger text-white rounded-top-4">
+                <h6 class="modal-title fw-bold">Delete Event?</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="small text-muted mb-4">Are you sure you want to remove <br> <strong id="deleteEventTitle" class="text-dark fs-6"></strong>?</p>
+                <form id="deleteEventForm" method="POST">
+                    <button type="submit" class="btn btn-danger w-100 fw-bold shadow-sm">Delete Event</button>
+                </form>
+                <button type="button" class="btn btn-light w-100 fw-semibold mt-2" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Hide data object from syntax highlighters -->
+<script id="event-data" type="application/json">
+    {{ events | tojson | safe }}
+</script>
+
+<script>
+    const sidebarEl = document.getElementById('sidebarElement');
+    if (sidebarEl) {
+        sidebarEl.style.setProperty('--sidebar-bg', localStorage.getItem('sidebarBgColor') || '#150f3b');
+        sidebarEl.style.setProperty('--sidebar-border', localStorage.getItem('sidebarBorderColor') || '#ffde59');
+    }
+
+    const rawEvents = JSON.parse(document.getElementById('event-data').textContent || '[]');
+    let currentDate = new Date();
+
+    function changeMonth(dir) {
+        currentDate.setMonth(currentDate.getMonth() + dir);
+        renderCalendar(currentDate);
+    }
+
+    // Modal Triggers
+    window.openEventModal = function(dateString) {
+        document.getElementById('event_date').value = dateString;
+        var myModal = new bootstrap.Modal(document.getElementById('createEventModal'));
+        myModal.show();
+    }
+
+    window.openDeleteModal = function(id, title, e) {
+        e.stopPropagation(); // Prevents the parent cell click (which opens Create Event) from triggering
+        document.getElementById('deleteEventTitle').innerText = title;
+        document.getElementById('deleteEventForm').action = "/calendar/delete_event/" + id;
+        var myModal = new bootstrap.Modal(document.getElementById('deleteEventModal'));
+        myModal.show();
+    }
+
+    function renderCalendar(date) {
+        currentDate = new Date(date);
+        const grid = document.getElementById('calendarGrid');
+        
+        grid.innerHTML = `
+            <div class="calendar-day header">Sun</div><div class="calendar-day header">Mon</div>
+            <div class="calendar-day header">Tue</div><div class="calendar-day header">Wed</div>
+            <div class="calendar-day header">Thu</div><div class="calendar-day header">Fri</div>
+            <div class="calendar-day header">Sat</div>
+        `;
+
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        document.getElementById('currentMonthYear').textContent = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(currentDate);
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        for(let i = 0; i < firstDay; i++) {
+            grid.innerHTML += `<div class="calendar-day other-month"></div>`;
+        }
+
+        for(let day = 1; day <= daysInMonth; day++) {
+            let dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            
+            let html = `<div class="calendar-day" onclick="openEventModal('${dateStr}')">
+                            <strong class="text-secondary">${day}</strong>`;
+            
+            // Event pills are attached as DOM nodes below to avoid HTML injection.
+            html += `</div>`;
+            grid.insertAdjacentHTML('beforeend', html);
+            const cell = grid.lastElementChild;
+            rawEvents.filter(ev => String(ev.event_date).slice(0, 10) === dateStr).forEach(ev => {
+                const pill = document.createElement('span');
+                pill.className = 'event-badge ' + (ev.category_color || 'bg-primary');
+                pill.textContent = ev.title;
+                pill.title = ev.description || ev.title;
+                pill.onclick = (event) => {
+                    event.stopPropagation();
+                    if (!ev.is_course_deadline && typeof ev.id === 'number') {
+                        openDeleteModal(ev.id, ev.title, event);
+                    } else {
+                        // Course assessment deadlines come from the module due date.
+                        alert((ev.description || ev.title) + '\nChange its due date in the course module.');
+                    }
+                };
+                cell.appendChild(pill);
+            });
+        }
+    }
+    
+    renderCalendar(currentDate);
+</script>
+</body>
+</html>
